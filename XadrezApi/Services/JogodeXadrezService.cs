@@ -5,7 +5,7 @@ using XadrezApi.Xadrez;
 namespace Xadrez.API.Services;
 public class JogoDeXadrezService
 {
-    //** <summary>
+    
     private readonly PartidaDeXadrez _partida;
 
     public JogoDeXadrezService()
