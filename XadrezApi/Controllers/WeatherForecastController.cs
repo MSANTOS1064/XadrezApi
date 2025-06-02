@@ -62,6 +62,18 @@ public class XadrezController : ControllerBase
         return Content(texto, "text/plain");
     }
 
-
+    [HttpPost("reiniciar")]
+    public IActionResult ReiniciarJogo()
+    {
+        try
+        {
+            _xadrezService.ReiniciarPartida();
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { erro = ex.Message });
+        }
+    }
 
 }

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <title>Tabuleiro Xadrez - Visualização</title>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/css/chessboard.min.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        #board {
+            width: 400px;
+            margin: auto;
+        }
+
+        #status {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tabuleiro de Xadrez - Visualização</h1>
+    <div id="board"></div>
+    <div id="status">Clique em uma peça para ver os movimentos possíveis.</div>
+
+    <!-- jQuery deve vir antes -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- chessboard.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/js/chessboard.min.js"></script>
+
+    <script>
+        const apiBaseUrl = "https://localhost:7208"; // Atualize conforme necessário
+
+        $(function () {
+            const board = Chessboard('board', {
+                draggable: false,
+                position: 'start',
+                onClick: async function (square, piece) {
+                    if (!piece) {
+                        $("#status").text("Clique em uma peça para ver os movimentos possíveis.");
+                        return;
+                    }
+
+                    $("#status").text(`Carregando movimentos possíveis para a peça em ${square}...`);
+
+                    try {
+                        const response = await fetch(`${apiBaseUrl}/api/xadrez/movimentos-possiveis/${square}`);
+
+                        if (!response.ok) {
+                            const error = await response.json();
+                            $("#status").text(`Erro: ${error.erro || "Problema ao buscar movimentos."}`);
+                            return;
+                        }
+
+                        const movimentos = await response.json();
+
+                        if (!movimentos || movimentos.length === 0) {
+                            $("#status").text(`Nenhum movimento possível para a peça em ${square}.`);
+                            return;
+                        }
+
+                        $("#status").text(`Movimentos possíveis para a peça em ${square}: ${movimentos.join(", ")}`);
+                    } catch (error) {
+                        $("#status").text(`Erro ao comunicar com a API: ${error.message}`);
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

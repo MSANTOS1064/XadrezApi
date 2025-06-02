@@ -1,12 +1,12 @@
-﻿using XadrezApi.Domain;
+﻿using Xadrez.API.Domain.Exceptions;
+using XadrezApi.Domain;
 using XadrezApi.Dtos;
 using XadrezApi.Xadrez;
 
 namespace Xadrez.API.Services;
 public class JogoDeXadrezService
 {
-    
-    private readonly PartidaDeXadrez _partida;
+    private PartidaDeXadrez _partida; // Remove readonly modifier
 
     public JogoDeXadrezService()
     {
@@ -26,13 +26,36 @@ public class JogoDeXadrezService
 
     public bool PartidaFinalizada => _partida.terminada;
 
-    public bool[,] ObterMovimentosPossiveis(string origemStr)
+    public List<string> ObterMovimentosPossiveis(string origemStr)
     {
-        Posicao origem = new PosicaoXadrez(origemStr[0], int.Parse(origemStr[1].ToString())).toPosicao();
-        
-        _partida.validarPosicaoDeOrigem(origem);
+        try
+        {
+            if (string.IsNullOrEmpty(origemStr) || origemStr.Length != 2)
+                throw new TabuleiroException("Posição inválida.");
 
-        return _partida.tab.peca(origem).movimentosPossiveis();
+            Posicao origem = new PosicaoXadrez(origemStr[0], int.Parse(origemStr[1].ToString())).toPosicao();
+            _partida.validarPosicaoDeOrigem(origem);
+
+            var matriz = _partida.tab.peca(origem).movimentosPossiveis();
+            var movimentos = new List<string>();
+
+            for (int i = 0; i < 8; i++)
+            {
+                for (int j = 0; j < 8; j++)
+                {
+                    if (matriz[i, j])
+                    {
+                        movimentos.Add(new PosicaoXadrez((char)('a' + j), 8 - i).ToString());
+                    }
+                }
+            }
+
+            return movimentos;
+        }
+        catch (Exception ex)
+        {
+            throw new TabuleiroException("Erro ao processar a posição: " + ex.Message);
+        }
     }
 
     public void RealizarJogada(string origemStr, string destinoStr)
@@ -80,7 +103,10 @@ public class JogoDeXadrezService
         return sb.ToString();
     }
 
-
+    public void ReiniciarPartida()
+    {
+        _partida = new PartidaDeXadrez(); // Cria uma nova partida do zero
+    }
 
     // Representa as peças com símbolos unicode
     private string RepresentacaoUnicode(Peca peca)
